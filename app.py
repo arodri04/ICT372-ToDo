@@ -1,28 +1,89 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template as rt, request, redirect, url_for, session
+from flask_login import logout_user
 from flask_sqlalchemy import SQLAlchemy
+import string
+import random
+import hashlib
+from instance.SQLiteUtil import *
 
 app = Flask(__name__)
+app.secret_key = "secret"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+#dummy login
+users = {"admin":"AggiesR0ck$"}
 
 #To update models need to "flask shell" "from app import db" "db.create_all()"
 class Todo(db.Model):
     task_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     done = db.Column(db.Boolean)
+    userId = db.Column(db.Integer, db.ForeignKey('users.userId'), nullable=False)
     
+class Users(db.Model):
+    userId = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100))
+    password = db.Column(db.String(20))
+    salt = db.Column(db.String(10))
+
+def saltShaker():
+    characters = string.ascii_letters + string.digits
+    salt = ''.join(random.choices(characters, k=5))
+    return salt
 
 @app.route('/')
 def home():
-    todo_list=Todo.query.all()
-    return render_template('base.html',todo_list=todo_list)
+    if session:
+        todo_list=getUserTodos(getUserId(session['user'])[0])
+        user = session['user']
+    else:
+        todo_list = None
+        user = None 
+    return rt('base.html',todo_list=todo_list, user=user)
+
+@app.route('/login', methods=["GET","POST"])
+def login():
+        if request.method == "POST":
+            username = request.form.get('email')
+            password = request.form.get('password')
+
+            if validateLogin(username, password):
+                session['user'] = username
+                print(f"HERE: {username} {getUserId(username)[0]}")
+                return redirect(url_for("home"))
+            else:
+                return rt("login.html", error="Invalid Login")
+         
+        return rt("login.html")       
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for("home"))
+
+@app.route('/register', methods=["GET","POST"])
+def register():
+        if request.method == "POST":
+            username = request.form.get('email')
+            password = request.form.get('password')
+            #salt the password
+            salt = saltShaker()
+            hashPass = hashlib.sha256((password+salt).encode('utf-8')).hexdigest()
+            
+            new_user = Users(username=username, password=hashPass, salt=salt)
+            db.session.add(new_user)
+            db.session.commit()
+            return redirect(url_for("login"))
+
+         
+        return rt("register.html")    
 
 @app.route('/add',methods=['POST'])
 def add():
     name = request.form.get("name")
-    new_task=Todo(name=name,done=False)
+    new_task=Todo(name=name,done=False, userId=getUserId(session['user'])[0])
     db.session.add(new_task)
     db.session.commit()
     return redirect(url_for("home"))

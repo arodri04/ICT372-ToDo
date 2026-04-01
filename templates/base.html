@@ -7,6 +7,9 @@
 </head>
 <body>
 <div id="first" >
+    <a href="{{ url_for('login')}}">login</a>
+    <a href="{{ url_for('register')}}">Register</a>
+    <a href="{{ url_for('logout')}}">logout</a>
         <h1>To Do List</h1>
         <form  action="/add" method="post">
             <div >
@@ -18,19 +21,23 @@
         <br><br>
      <table>
          <tbody>
+        {% if todo_list %}
+        <h1>Hello {{ user }}</h1>
         {% for todo in todo_list %}
+        
         <tr>
-            <td class="thick">{{todo.task_id }}</td>
-            <td class="thick">{{ todo.name }}</td>
-            {% if todo.done == False %}
+            <td class="thick">{{ todo[0] }}</td>
+            <td class="thick">{{ todo[1] }}</td>
+            {% if todo[2] == False %}
             <td><label class="label pending">Not done</label></td>
             {% else %}
             <td><label class="label done">Done</label></td>
             {% endif %}
-            <td><a  href="/update/{{ todo.task_id }}" class="button2">Update</a></td>
-            <td><a  href="/delete/{{ todo.task_id }}" class="button3">Delete</a></td>
+            <td><a  href="/update/{{ todo[0] }}" class="button2">Update</a></td>
+            <td><a  href="/delete/{{ todo[0] }}" class="button3">Delete</a></td>
         </tr>
         {% endfor %}
+        {% endif %}
     </tbody>
 </table>
 </div>
