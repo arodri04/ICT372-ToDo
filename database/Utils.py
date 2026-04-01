@@ -45,12 +45,12 @@ def validateEmail(username):
         conn = connectDB()
         if not conn:
             return False 
-        
+        #Make sure that there isnt more emails
         cursor = conn.cursor()
         query = "SELECT 1 FROM users WHERE username = ?"
         cursor.execute(query,(username,))
         result = cursor.fetchone()
-
+        #Make sure it is an email
         if not result:
             if re.fullmatch(pattern, username):
                 return True
