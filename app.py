@@ -1,5 +1,4 @@
 from flask import Flask, render_template as rt, request, redirect, url_for, session
-from flask_login import logout_user
 from flask_sqlalchemy import SQLAlchemy
 import string
 import random
