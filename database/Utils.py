@@ -1,5 +1,6 @@
 import sqlite3
 import hashlib
+import string
 import re
 from datetime import date
 import random
@@ -40,9 +41,27 @@ def validateLogin(username, password):
 
 def validateEmail(username):
     pattern ='^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'
-    if re.fullmatch(pattern, username):
-        return True
-    return False
+    try:
+        conn = connectDB()
+        if not conn:
+            return False 
+        
+        cursor = conn.cursor()
+        query = "SELECT 1 FROM users WHERE username = ?"
+        cursor.execute(query,(username,))
+        result = cursor.fetchone()
+
+        if not result:
+            if re.fullmatch(pattern, username):
+                return True
+        return False
+    except sqlite3.Error as e:
+        print(f"Database Error {e}")
+        return False
+    finally:
+        if conn:
+            conn.close()
+    
 
 
 def getUserId(username):

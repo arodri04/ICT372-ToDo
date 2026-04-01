@@ -13,9 +13,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
 
-
+#All the routes for the app are here
 @app.route('/')
 def home():
+    #If there is no session populate with none
     if session:
         todo_list=getUserTodos(session['userId'])
         lateTodos=getLateList(todo_list)
@@ -31,7 +32,7 @@ def login():
         if request.method == "POST":
             username = request.form.get('email')
             password = request.form.get('password')
-
+            #Check DB for user
             if validateLogin(username, password):
                 session['user'] = username
                 session['userId'] = getUserId(username)[0]
@@ -51,6 +52,7 @@ def register():
         if request.method == "POST":
             username = request.form.get('email')
             password = request.form.get('password')
+            #Make sure an email address was sent
             if validateEmail(username):
                 #salt the password
                 salt = saltShaker()
@@ -60,7 +62,7 @@ def register():
                 db.session.add(new_user)
                 db.session.commit()
                 return redirect(url_for("login"))
-            return redirect(url_for("register"))
+            return rt("register.html", error="Could Not Validate Email.")
 
          
         return rt("register.html")    
