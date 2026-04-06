@@ -1,1 +1,1 @@
-# ICT460-ToDo
+# ICT372-ToDo
